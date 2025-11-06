@@ -1,0 +1,65 @@
+service: event-notification-system
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-offline
+
+build:
+  esbuild: false
+
+useDotenv: true
+
+console: false
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-southeast-1
+
+  environment:
+    USERS_TABLE_NAME: ${self:custom.usersTableName}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "Fn::GetAtt": [UsersTable, Arn]
+
+package:
+  individually: true
+
+custom:
+  webpack:
+    webpackConfig: "webpack.config.js"
+    includeModules: true
+
+  usersTableName: users-table-${sls:stage}
+
+  dynamodb:
+    stages:
+      - dev # Run this plugin only in the 'dev' stage
+    start:
+      port: 8000 # Run the local DB on port 8000
+      convertEmptyValues: true
+      noStart: true
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usersTableName}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
