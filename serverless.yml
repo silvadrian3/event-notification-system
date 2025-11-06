@@ -50,6 +50,32 @@ custom:
       convertEmptyValues: true
       noStart: true
 
+functions:
+  createUser:
+    handler: src/functions/api/createUser.handler
+    events:
+      - httpApi:
+          path: /user
+          method: post
+  deleteUser:
+    handler: src/functions/api/deleteUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: delete
+  updateUser:
+    handler: src/functions/api/updateUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: put
+  getUser:
+    handler: src/functions/api/getUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: get
+
 resources:
   Resources:
     UsersTable:
