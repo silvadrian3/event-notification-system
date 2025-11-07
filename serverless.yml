@@ -1,0 +1,158 @@
+service: event-notification-system
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+build:
+  esbuild: false
+
+useDotenv: true
+
+console: false
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION}
+
+  environment:
+    USERS_TABLE_NAME: ${self:custom.usersTableName}
+    HOOKBIN_URL: ${env:HOOKBIN_URL}
+    EVENT_QUEUE_URL: { Ref: EventMessageQueue }
+    EVENT_QUEUE_ARN: { "Fn::GetAtt": [EventMessageQueue, Arn] }
+    SCHEDULER_ROLE_ARN: { "Fn::GetAtt": [SchedulerSqsRole, Arn] }
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "Fn::GetAtt": [UsersTable, Arn]
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - "Fn::GetAtt": [EventMessageQueue, Arn]
+
+        - Effect: Allow
+          Action:
+            - scheduler:CreateSchedule
+            - scheduler:UpdateSchedule
+            - scheduler:DeleteSchedule
+            - scheduler:GetSchedule
+          Resource: "arn:aws:scheduler:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:schedule/default/*"
+
+        - Effect: Allow
+          Action:
+            - iam:PassRole
+          Resource:
+            - "Fn::GetAtt": [SchedulerSqsRole, Arn]
+
+package:
+  individually: true
+
+custom:
+  webpack:
+    webpackConfig: "webpack.config.js"
+    includeModules: true
+    keepOutputDirectory: true
+
+  usersTableName: users-table-${sls:stage}
+
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+
+functions:
+  createUser:
+    handler: src/functions/api/createUser.handler
+    events:
+      - httpApi:
+          path: /user
+          method: post
+  deleteUser:
+    handler: src/functions/api/deleteUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: delete
+  updateUser:
+    handler: src/functions/api/updateUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: put
+  getUser:
+    handler: src/functions/api/getUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: get
+
+  processEventMessage:
+    handler: src/functions/worker/processMessage.handler
+    events:
+      - sqs:
+          arn: { "Fn::GetAtt": [EventMessageQueue, Arn] }
+          batchSize: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource:
+          - "Fn::GetAtt": [UsersTable, Arn]
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usersTableName}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    EventMessageDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: event-message-dlq-${sls:stage}
+
+    EventMessageQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: event-message-queue-${sls:stage}
+        RedrivePolicy:
+          deadLetterTargetArn: { "Fn::GetAtt": [EventMessageDLQ, Arn] }
+          maxReceiveCount: 3
+
+    SchedulerSqsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: scheduler-to-sqs-role-${sls:stage}
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: scheduler.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: scheduler-to-sqs-policy-${sls:stage}
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage
+                  Resource:
+                    "Fn::GetAtt": [EventMessageQueue, Arn]

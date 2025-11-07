@@ -1,0 +1,71 @@
+# Node dependencies
+node_modules/
+
+# Compiled output
+dist/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Environment variables (DO NOT COMMIT!)
+.env
+.env.local
+.env.dev
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Coverage and test results
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+.envrc
+
+# Local database or serverless data
+data/
+.db/
+*.sqlite
+*.db
+.dynamodb
+
+# AWS / Serverless / Webpack
+.aws/
+.aws-sam/
+.serverless/
+.localstack/
+.local/
+.aws-credentials.json
+.webpack
+
+# Docker
+docker-compose.override.yml
+.docker/
+*.pid
+
+# Misc
+*.tgz
+*.zip
+*.bak
+*.old
+package-lock.json
+
