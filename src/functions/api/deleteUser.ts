@@ -1,6 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../lib/dynamodb";
+import { deleteBirthdaySchedule } from '../../services/scheduleService';
 
 const usersTableName = process.env.USERS_TABLE_NAME;
 
@@ -23,6 +24,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         },
       })
     );
+
+    await deleteBirthdaySchedule(userId);
 
     return {
       statusCode: 200,

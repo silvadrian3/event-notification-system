@@ -3,6 +3,7 @@ import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../lib/dynamodb";
 import { v4 as uuid } from "uuid";
 import { CreateUserPayloadSchema, User } from "../../types";
+import { createOrUpdateEventSchedule } from "../../services/scheduleService";
 
 const usersTableName = process.env.USERS_TABLE_NAME;
 
@@ -39,6 +40,17 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         Item: newUser,
       })
     );
+
+    await createOrUpdateEventSchedule(newUser);
+
+    if (process.env.IS_OFFLINE === "true") {
+      console.log(
+        "OFFLINE: Skipping SQS message (would be triggered by EventBridge Scheduler in production)"
+      );
+      console.log(
+        `OFFLINE: In production, a message will be sent to SQS on ${newUser.birthday} at 9:00 AM ${newUser.location}`
+      );
+    }
 
     return {
       statusCode: 201,

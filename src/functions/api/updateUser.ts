@@ -2,6 +2,8 @@ import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../../lib/dynamodb";
 import { UpdateUserPayloadSchema } from "../../types";
+import { createOrUpdateEventSchedule } from '../../services/scheduleService';
+import { User } from '../../types'; // We need the User type
 
 const usersTableName = process.env.USERS_TABLE_NAME;
 
@@ -69,6 +71,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     });
 
     const { Attributes: updatedUser } = await ddbDocClient.send(command);
+
+    await createOrUpdateEventSchedule(updatedUser as User);
 
     return {
       statusCode: 200,
