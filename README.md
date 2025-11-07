@@ -39,10 +39,8 @@ AWS_ACCOUNT_ID=123456789012
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 USERS_TABLE_NAME=users-table-dev
-HOOKBIN_URL=https://hookb.in/your-webhook-url
+HOOKBIN_URL=https://hookbin.com/your-webhook-url
 ```
-
-You can get a free webhook URL at [hookb.in](https://hookb.in) for testing.
 
 ### 3. Start local DynamoDB
 
@@ -166,15 +164,14 @@ Reinstall: `rm -rf node_modules package-lock.json && npm install`
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| IS_OFFLINE | Local development mode | Local only |
-| AWS_REGION | AWS region | Yes |
-| AWS_ACCOUNT_ID | Your AWS account ID | Yes |
-| USERS_TABLE_NAME | DynamoDB table name | Auto-set |
-| HOOKBIN_URL | Webhook for notifications | Yes |
+| Variable         | Description               | Required   |
+| ---------------- | ------------------------- | ---------- |
+| IS_OFFLINE       | Local development mode    | Local only |
+| AWS_REGION       | AWS region                | Yes        |
+| AWS_ACCOUNT_ID   | Your AWS account ID       | Yes        |
+| USERS_TABLE_NAME | DynamoDB table name       | Auto-set   |
+| HOOKBIN_URL      | Webhook for notifications | Yes        |
 
-## For Junior Developers
 
 If you're new to serverless or AWS, here's what these services do:
 
@@ -187,5 +184,3 @@ If you're new to serverless or AWS, here's what these services do:
 **DynamoDB**: NoSQL database - stores data as key-value pairs instead of SQL tables
 
 **Why mock in tests?**: We don't want tests making real AWS calls (slow, costs money, needs credentials)
-
-Check `CLAUDE.md` for detailed development documentation.
