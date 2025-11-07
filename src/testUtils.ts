@@ -1,4 +1,4 @@
-import { Context, APIGatewayProxyResultV2 } from "aws-lambda";
+import { Context, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 
 /**
  * Creates a mock AWS Lambda Context object for testing
@@ -21,8 +21,11 @@ export const createMockContext = (): Context => {
 };
 
 /**
- * Type guard to ensure result is APIGatewayProxyResultV2
+ * Type helper to properly type API Gateway responses in tests.
+ * This converts the union type to the structured result type with statusCode and body.
  */
-export const asApiGatewayResult = (result: any): APIGatewayProxyResultV2 => {
-  return result as APIGatewayProxyResultV2;
+export const asApiGatewayResult = (
+  result: any
+): APIGatewayProxyStructuredResultV2 => {
+  return result as APIGatewayProxyStructuredResultV2;
 };
